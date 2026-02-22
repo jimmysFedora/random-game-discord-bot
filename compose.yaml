@@ -1,0 +1,9 @@
+services:
+  discord-bot:
+    build: .
+    container_name: doggo-game-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data/games.csv:/app/games.csv
