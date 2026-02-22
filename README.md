@@ -10,10 +10,7 @@ Can't decide what to play with friends? This fixes it, as your custom discord bo
 
 **Screenshots:**
 
-<img width="535" height="689" alt="Screenshot 2026-02-22 at 10 51 22" src="https://github.com/user-attachments/assets/e7a86689-c3c4-473a-bd67-203fd859bfeb" />
-<br>
-<img width="389" height="83" alt="Screenshot 2026-02-22 at 10 52 06" src="https://github.com/user-attachments/assets/c9417582-cc60-47b3-87c3-8d8287ada16e" />
-
+<img width="349" height="910" alt="Screenshot 2026-02-22 at 11 52 45" src="https://github.com/user-attachments/assets/75319c45-712c-4df8-94e2-e1a3bc03c3a1" />
 
 **Requirements:**
 - A key generated from an app on Discord Developer Portal
