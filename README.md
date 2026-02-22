@@ -17,6 +17,10 @@ Can't decide what to play with friends? This fixes it, as your custom discord bo
 <img width="1391" height="582" alt="image" src="https://github.com/user-attachments/assets/7dd7e7e4-e40a-42c1-a080-134fe2ff425f" />
 
 - Bot must have `applications.commands` and `bot` scope with required scopes and `Send Messages` and `Read Channels` permissions
+<img width="1460" height="570" alt="image" src="https://github.com/user-attachments/assets/a313e3fe-2919-4723-aae6-538bb3a30369" />
+
+<img width="1072" height="762" alt="image" src="https://github.com/user-attachments/assets/72d4abbb-89b1-4a21-b166-b1498fa831dd" />
+
 
 ## Installation
 - Clone repo
