@@ -5,7 +5,9 @@ Can't decide what to play with friends? This fixes it, as your custom discord bo
 - A Python app built to establish websocket connection with Discord for real-time processing of commands.
 - `/list` - lists all the games from the provided `games.csv` file (csv file supports live editing!)
 - `/roll` - rolls a random game using `random.choice()`
-- Available as a Docker container.
+- `/add` - adds a game to the list (must enter one at a time)`
+- `/rm` - removes a game entry (must remove one game at a time)`
+- Available as a Docker container for self-hosting needs.
 
 
 ## Screenshots
@@ -22,27 +24,24 @@ Can't decide what to play with friends? This fixes it, as your custom discord bo
 <img width="1072" height="762" alt="image" src="https://github.com/user-attachments/assets/72d4abbb-89b1-4a21-b166-b1498fa831dd" />
 
 
-## Installation
-- Clone repo
-- Create environment file with TOKEN entry with key from Discord Developer Portal
+## Docker Compose (recommended)
+- Have Docker installed https://www.docker.com/get-started/
+- Clone repo with `git clone https://github.com/jimmysFedora/random-game-discord-bot`
+- Invite bot to server from OAuth2 link
+- Create an `.env` file with TOKEN entry with key from Discord Developer Portal
 - Edit provided `games.csv` with desired games
 - Run `docker compose up -d`
+- Verify container is running `docker ps`
+
+## Python Installation
+- Have Python installed
+- Clone repo with `git clone https://github.com/jimmysFedora/random-game-discord-bot`
 - Invite bot to server from OAuth2 link
+- Create an `.env` file with TOKEN entry with key from Discord Developer Portal
+- Edit provided `games.csv` with desired games
+- Move python file and csv file into the same directory where your environment file is and delete the data and src folders prior to running the script
 
-## Docker Compose
-```bash
-services:
-  discord-bot:
-    build: .
-    container_name: doggo-game-bot
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - ./data/games.csv:/app/games.csv
-```
-
-## Example ENV
+## Example .env file
 ```
 TOKEN=YOURKEYHERE
 ```
