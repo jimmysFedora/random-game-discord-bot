@@ -26,12 +26,21 @@ Can't decide what to play with friends? This fixes it, as your custom discord bo
 
 ## Docker Compose (recommended)
 - Have Docker installed https://www.docker.com/get-started/
-- Clone repo with `git clone https://github.com/jimmysFedora/random-game-discord-bot`
-- Invite bot to server from OAuth2 link
-- Create an `.env` file with TOKEN entry with key from Discord Developer Portal
-- Edit provided `games.csv` with desired games
+- Create docker-compose.yaml and paste the following below
+- ````services:
+  discord-gamebot:
+    image: ghcr.io/jimmysfedora/random-game-discord-bot:latest
+    container_name: discord-gamebot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./games.csv:/app/games.csv
+- Create an `.env` file with TOKEN entry with key from Discord Developer Portal in same directory as compose file
+- Create a `games.csv` file in same directory with desired games
 - Run `docker compose up -d`
-- Verify container is running `docker ps`
+- Verify container is running and no errors with `docker ps` and `docker logs container_id`
+- Invite bot to server from OAuth2 link using required permissions
 
 ## Python Installation
 - Have Python installed
