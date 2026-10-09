@@ -1,8 +1,6 @@
-# 🎮 random-game-discord-bot
+# random-game-discord-bot
 
-> Can't decide what to play with friends? Let the Doggo of Games decide.
-
-A lightweight Discord bot that rolls a random video game from a csv list.
+A lightweight Discord bot that picks a random game from a list stored in SQLite.
 
 ---
 
@@ -10,14 +8,14 @@ A lightweight Discord bot that rolls a random video game from a csv list.
 
 | Command | Description |
 |--------|-------------|
-| `/list` | Lists all games from `games.csv` (supports live editing — no restart needed!) |
-| `/roll` | Picks a random game via `random.choice()` |
-| `/add`  | Adds a game to the list (one at a time) |
-| `/rm`   | Removes a game from the list (one at a time) |
+| `/list` | Lists all games, sorted alphabetically (split across messages if long) |
+| `/roll` | Picks a random game |
+| `/add`  | Adds a game, up to 100 characters (duplicates are ignored, case-insensitive) |
+| `/rm`   | Removes a game, with autocomplete (case-insensitive) |
 
-The `games.csv` supports **live editing** — add or remove games while the bot is running and `/list` will reflect the changes immediately.
+Games are stored in `data/games.db` (override with the `DB_PATH` env var). On first start, if the database is empty and a `games.csv` (one game per line) sits next to it, the games are imported from it.
 
-Built with Python. Available as a Docker image for easy self-hosting.
+Built with Python. Runs as a rootless Podman container or directly with uv.
 
 ---
 
@@ -50,61 +48,76 @@ Under **OAuth2 → URL Generator**, enable the following:
 
 ## Setup
 
-### Option A — Docker Compose (recommended)
+### Option A — Podman (recommended)
 
-1. **Install Docker** — [get-started](https://www.docker.com/get-started/)
+Runs the bot as a rootless container managed by systemd, using a [Quadlet](https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html) unit. Requires Podman 5+.
 
-2. **Create `docker-compose.yaml`:**
+1. **Clone the repo** into your home directory and build the image:
 
-```yaml
-services:
-  discord-gamebot:
-    image: ghcr.io/jimmysfedora/random-game-discord-bot:latest
-    container_name: discord-gamebot
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - ./games.csv:/app/games.csv
+```bash
+git clone https://github.com/jimmysFedora/random-game-discord-bot ~/random-game-discord-bot
+cd ~/random-game-discord-bot
+podman build -t random-game-bot .
 ```
 
-3. **Create `.env`** in the same directory:
+2. **Create `.env`** in the repo root:
 
 ```env
 TOKEN=YOUR_BOT_TOKEN_HERE
 ```
 
-4. **Create `games.csv`** in the same directory and populate it with your games (one per line).
-
-5. **Verify** file structure
-
-```
-.
-├── docker-compose.yaml
-├── .env
-└── games.csv
-```
-
-5. **Start the bot:**
+3. **Create the `data` folder** for the database:
 
 ```bash
-docker compose up -d
+mkdir data
 ```
 
-6. **Verify it's running:**
+   *(Optional)* Seed the game list (one game per line) before the first start. Otherwise use `/add`.
 
 ```bash
-docker ps
-docker logs discord-gamebot
+cp games.example.csv data/games.csv
+```
+
+4. **Install and start the service:**
+
+```bash
+mkdir -p ~/.config/containers/systemd
+cp random-game-bot.container ~/.config/containers/systemd/
+systemctl --user daemon-reload
+systemctl --user start random-game-bot
+```
+
+   If you cloned somewhere other than `~/random-game-discord-bot`, edit the paths in the copied `random-game-bot.container` first.
+
+5. **Keep it running after you log out** (and start it at boot):
+
+```bash
+loginctl enable-linger $USER
+```
+
+6. **Check it's running:**
+
+```bash
+systemctl --user status random-game-bot
+journalctl --user -u random-game-bot -f
 ```
 
 7. **Invite the bot** to your server using the OAuth2 URL generated in the Developer Portal.
 
+To update after pulling new code: `podman build -t random-game-bot . && systemctl --user restart random-game-bot`.
+
+To run it once without systemd:
+
+```bash
+podman run -d --name random-game-bot --env-file .env \
+  --userns keep-id:uid=1000,gid=1000 -v ./data:/app/data:Z localhost/random-game-bot
+```
+
 ---
 
-### Option B — Python (manual)
+### Option B — uv (manual)
 
-1. **Install Python** — [python.org](https://www.python.org/)
+1. **Install uv** — [docs.astral.sh/uv](https://docs.astral.sh/uv/getting-started/installation/). uv installs the right Python version (3.12) itself.
 
 2. **Clone the repo:**
 
@@ -119,12 +132,45 @@ cd random-game-discord-bot
 TOKEN=YOUR_BOT_TOKEN_HERE
 ```
 
-4. Move **`games.csv`** and **`random_game.py`** into same directory as .env and edit csv with desired games.
-
-5. **Run the bot:**
+4. *(Optional)* **Seed the game list** from the example (or write your own, one game per line):
 
 ```bash
-python random_game.py
+mkdir -p data && cp games.example.csv data/games.csv
+```
+
+5. **Run the bot** from the project root. uv creates the virtual environment and installs dependencies on first run. The database is created at `data/games.db`, seeded from `data/games.csv` if present.
+
+```bash
+uv run random-game-bot
 ```
 
 6. **Invite the bot** to your server using the OAuth2 URL from the Developer Portal.
+
+---
+
+## Development
+
+```bash
+uv run pytest           # run tests
+uv run ruff check .     # lint
+uv run ruff format .    # format
+```
+
+To run the tests and lint in a clean container instead (nothing is written to the repo):
+
+```bash
+podman run --rm --mount type=image,src=ghcr.io/astral-sh/uv:0.12,dst=/uvimg \
+  -v .:/src:ro,Z -w /src -e UV_PROJECT_ENVIRONMENT=/tmp/venv -e UV_CACHE_DIR=/tmp/uv-cache \
+  docker.io/library/python:3.12-slim \
+  sh -c '/uvimg/uv run -q --locked pytest -p no:cacheprovider && /uvimg/uv run -q --locked ruff check --no-cache .'
+```
+
+```
+src/random_game_bot/
+  bot.py                    # database, commands, entry point
+  __main__.py               # allows `python -m random_game_bot`
+tests/                      # pytest tests using fake Discord interactions
+games.example.csv           # example seed list
+random-game-bot.container   # Podman Quadlet unit
+data/                       # runtime data (database, optional seed CSV), git-ignored
+```

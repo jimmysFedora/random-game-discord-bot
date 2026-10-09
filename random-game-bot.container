@@ -1,0 +1,21 @@
+# Podman Quadlet unit: runs the bot as a rootless systemd user service.
+# Install: copy to ~/.config/containers/systemd/, then
+#   systemctl --user daemon-reload && systemctl --user start random-game-bot
+# Paths below assume the repo is cloned to ~/random-game-discord-bot (%h = your home dir).
+
+[Unit]
+Description=Random game Discord bot
+
+[Container]
+ContainerName=random-game-bot
+Image=localhost/random-game-bot
+EnvironmentFile=%h/random-game-discord-bot/.env
+Volume=%h/random-game-discord-bot/data:/app/data:Z
+# Map your host user to the container's app user (UID 1000) so ./data stays writable
+UserNS=keep-id:uid=1000,gid=1000
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
