@@ -156,6 +156,8 @@ uv run ruff check .     # lint
 uv run ruff format .    # format
 ```
 
+Every push to `main` runs the tests and lint in GitHub Actions, then publishes `ghcr.io/jimmysfedora/random-game-discord-bot` tagged `latest` and `sha-<commit>`. Pull requests only run the tests.
+
 To run the tests and lint in a clean container instead (nothing is written to the repo):
 
 ```bash
